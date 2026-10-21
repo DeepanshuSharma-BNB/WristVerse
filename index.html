@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#030914">
+  <meta name="description" content="Explore a living 3D solar system using wrist orientation on Meta Ray-Ban Display. A standalone, lightweight glasses web app.">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>WristVerse · Explore the cosmos</title>
+  <style>
+    :root{--ice:#dcefff;--sub:#8cabcf;--blue:#5eacff;--cyan:#74eadf;--stroke:rgba(123,171,223,.19);--panel:rgba(10,25,49,.91)}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#01030a;color:var(--ice);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}button{font:inherit;cursor:pointer}#app{position:relative;width:min(100vw,100vh,600px);height:min(100vw,100vh,600px);max-width:600px;max-height:600px;margin:auto;aspect-ratio:1;overflow:hidden;isolation:isolate;background:#01040b;touch-action:none}body{display:grid;place-items:center}
+    #sky{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}#scene{position:absolute;inset:0;z-index:1;outline:0;cursor:grab;touch-action:none}#scene:active{cursor:grabbing}#scene:focus-visible{outline:2px solid rgba(112,227,255,.65);outline-offset:-4px;border-radius:10px}
+    .shell-top{position:absolute;inset:0 0 auto 0;z-index:3;pointer-events:none;padding:22px 24px 0}.brandbar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:9px}.symbol{width:34px;height:34px;border-radius:12px;background:linear-gradient(140deg,#11305c,#1b1746);display:grid;place-items:center;box-shadow:0 0 22px rgba(42,105,237,.15);border:1px solid #2d4770}.symbol svg{width:26px;height:26px}.wordmark{font-weight:850;letter-spacing:1.65px;font-size:16px;line-height:1.05;color:#f0f8ff}.eyebrow{color:#81b0d6;font-size:8px;font-weight:800;letter-spacing:2.25px;margin-top:5px}.status{display:flex;align-items:center;gap:7px;border:1px solid rgba(113,167,219,.22);border-radius:20px;padding:8px 11px;color:#a8c7e5;background:rgba(7,15,30,.64);font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;min-height:30px}.status::before{content:'';width:5px;height:5px;border-radius:50%;background:#8da2bf;box-shadow:0 0 9px currentColor;flex-shrink:0}.status.live{color:#91ffe6;border-color:#3a9f93}.status.live::before{background:#4dffd8}.status.error{color:#ffbd9a;border-color:#96654f}.status.error::before{background:#ffa371}
+    #section{display:flex;gap:9px;align-items:center;margin-top:20px}#section .hairline{width:17px;height:1px;background:#6de6ea;opacity:.9}#section span{font-size:10px;letter-spacing:1.7px;color:#8ebddf;font-weight:850}#section .mode{margin-left:auto;color:#64e3e2;font-size:9px;letter-spacing:1px}
+    .scan{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.23;background-image:linear-gradient(90deg,transparent 49.8%,rgba(69,124,189,.1) 50%,transparent 50.2%);background-position:center;background-size:100% 100%}.vignette{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 34%,rgba(0,5,18,.31) 75%,rgba(0,2,9,.75))}
+    #reticle{position:absolute;z-index:4;left:50%;top:44%;width:106px;height:106px;transform:translate(-50%,-50%);pointer-events:none;opacity:.80;transition:opacity .3s}#reticle i{position:absolute;width:13px;height:13px;border-color:rgba(125,215,247,.64);border-style:solid}#reticle i:nth-child(1){left:0;top:0;border-width:1.5px 0 0 1.5px}#reticle i:nth-child(2){right:0;top:0;border-width:1.5px 1.5px 0 0}#reticle i:nth-child(3){left:0;bottom:0;border-width:0 0 1.5px 1.5px}#reticle i:nth-child(4){right:0;bottom:0;border-width:0 1.5px 1.5px 0}#reticle.inspect{opacity:0}
+    .info{position:absolute;z-index:5;left:23px;right:23px;bottom:92px;min-height:115px;border:1px solid rgba(92,142,192,.26);background:linear-gradient(130deg,rgba(10,24,47,.94),rgba(6,12,29,.86));border-radius:16px;box-shadow:0 20px 35px rgba(0,0,0,.24), inset 0 1px 0 rgba(111,180,246,.05);padding:15px 17px 12px;pointer-events:none;backdrop-filter:blur(5px)}.info-row{display:flex;gap:12px;justify-content:space-between;align-items:flex-start}.info #planetLabel{color:#fff;font-size:22px;line-height:1;font-weight:840;letter-spacing:.2px}.tagline{color:#7fafd5;font-size:10px;margin-top:6px;letter-spacing:.35px}.orbit-chip{color:#8cdae9;border:1px solid rgba(98,184,216,.23);font-size:9px;letter-spacing:.65px;padding:6px 8px;border-radius:8px;white-space:nowrap}.metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:15px;border-top:1px solid var(--stroke);padding-top:10px}.metric small{display:block;font-size:8px;color:#76a0c3;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:800}.metric strong{font-size:12px;font-weight:790;color:#dfedff;white-space:nowrap}
+    #bottom{position:absolute;z-index:10;bottom:16px;left:23px;right:23px;display:flex;gap:8px;align-items:stretch}.control{height:54px;border:1px solid rgba(106,163,226,.22);border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:1 1 0;background:rgba(20,39,72,.88);color:#cfeaff;min-width:0;padding:5px 4px}.control.primary{background:linear-gradient(145deg,#1e6eaa,#2559b3);border-color:#5eafff;color:#fff}.control svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.85;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}.control span{font-size:9px;font-weight:780;letter-spacing:.3px;white-space:nowrap}.control:focus-visible{outline:3px solid #c1f9ff;outline-offset:2px;border-color:#fff;background:#29517d}.control:active{transform:scale(.97)}
+    #toast{position:absolute;z-index:12;top:104px;left:50%;transform:translateX(-50%);color:#b6ecff;background:rgba(12,31,57,.95);border:1px solid rgba(116,201,250,.4);padding:10px 14px;border-radius:12px;min-width:220px;max-width:calc(100% - 50px);text-align:center;font-size:12px;line-height:1.35;pointer-events:none;box-shadow:0 8px 35px #0007;opacity:0;transition:opacity .2s}.hint{position:absolute;z-index:3;left:50%;bottom:222px;transform:translateX(-50%);white-space:nowrap;color:#7597bb;font-size:10px;letter-spacing:.65px;pointer-events:none;text-shadow:0 1px 9px #000}.help{position:absolute;z-index:20;inset:0;background:rgba(2,7,19,.96);display:none;padding:24px;flex-direction:column;gap:18px}.help.show{display:flex}.help h2{margin:4px 0 0;font-size:24px}.help p{color:#a3bddc;line-height:1.55;font-size:14px;margin:0}.help .line{padding:10px 0;border-bottom:1px solid #223b5b}.help strong{color:#dff5ff}.help .close{margin-top:auto;padding:14px;background:#1e6bab;color:#fff;border:1px solid #58aaf0;border-radius:12px;text-align:center;font-weight:750}.help .close:focus-visible{outline:3px solid white}
+    #app.compact .info{bottom:84px}#app.compact #bottom{bottom:11px}
+    @media(max-width:420px){.shell-top{padding:15px 17px 0}.brand .wordmark{font-size:14px}.status{font-size:8px;padding:7px 9px}.info{left:14px;right:14px;bottom:72px;min-height:92px;padding:9px 12px 8px}.info #planetLabel{font-size:19px}.tagline{font-size:9px;margin-top:4px}.metrics{margin-top:8px;padding-top:6px}.metric strong{font-size:10px}.metric small{font-size:7px}.orbit-chip{font-size:7px}#bottom{bottom:8px;left:14px;right:14px;gap:5px}.control{height:47px;border-radius:9px}.control span{font-size:8px}#section{margin-top:10px}.hint{bottom:180px;font-size:8px}#toast{top:73px}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+<main id="app" aria-label="WristVerse, interactive solar system">
+  <canvas id="sky" width="600" height="600" aria-hidden="true"></canvas>
+  <div id="scene" role="button" tabindex="0" aria-label="Universe. Left or right: change planet. Enter: inspect. Down: toolbar. Drag or use wrist motion to orbit the solar system."></div>
+  <div class="scan" aria-hidden="true"></div><div class="vignette" aria-hidden="true"></div>
+  <header class="shell-top">
+    <div class="brandbar"><div class="brand"><div class="symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="6.2" stroke="#8eeaff" stroke-width="2"/><ellipse cx="16" cy="16" rx="14" ry="6.5" transform="rotate(-28 16 16)" stroke="#5a89ff" stroke-width="1.8"/><circle cx="26.4" cy="9.9" r="2" fill="#90f6f2"/></svg></div><div><div class="wordmark">WRISTVERSE</div><div class="eyebrow">THE UNIVERSE IN YOUR HAND</div></div></div><div id="sensorStatus" class="status" role="status" aria-live="polite">WRIST OFF</div></div>
+    <div id="section"><div class="hairline"></div><span>EXPLORE THE SOLAR SYSTEM</span><span class="mode" id="modeLabel">ORBIT VIEW</span></div>
+  </header>
+  <div id="reticle" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="hint" id="hint">← → CHANGE PLANET · ENTER TO EXPLORE</div>
+  <section class="info" aria-label="Selected celestial object"><div class="info-row"><div><div id="planetLabel">EARTH</div><div class="tagline" id="planetTag">Our pale blue dot</div></div><div class="orbit-chip" id="planetIndex">04 / 09</div></div><div class="metrics"><div class="metric"><small>From sun</small><strong id="distance">1.00 AU</strong></div><div class="metric"><small>Year length</small><strong id="period">365 days</strong></div><div class="metric"><small>Known moons</small><strong id="moons">1</strong></div></div></section>
+  <nav id="bottom" aria-label="Universe actions">
+    <button type="button" class="control primary" id="wristBtn" aria-label="Enable wrist tracking"><svg viewBox="0 0 24 24"><path d="M3 16.5 8 21l4-4 3-1 5-7-2-2-4 4-4-5-3 2 4 6-3 3"/><path d="M13 4c4-1 7 1 7 5"/></svg><span>WRIST</span></button>
+    <button type="button" class="control" id="centerBtn" aria-label="Recenter wrist orientation"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><circle cx="12" cy="12" r="3"/></svg><span>RECENTER</span></button>
+    <button type="button" class="control" id="inspectBtn" aria-label="Inspect selected planet"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m14.5 14.5 6 6M7.5 10h5M10 7.5v5"/></svg><span>EXPLORE</span></button>
+    <button type="button" class="control" id="nextBtn" aria-label="Next planet"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>NEXT</span></button>
+    <button type="button" class="control" id="helpBtn" aria-label="Open interaction instructions"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 0 1 4.8.3c0 1.7-2.4 2.1-2.4 3.7M12 17.1h.01"/></svg><span>HELP</span></button>
+  </nav>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <aside class="help" id="help" aria-label="Help" aria-hidden="true"><h2>Welcome to WristVerse</h2><p>Explore the solar system through perspective, time and motion. Everything happens directly in your browser.</p><div class="line"><strong>Rotate your wrist</strong><p>Tap WRIST, allow sensor access, then twist or tilt your arm to orbit the scene.</p></div><div class="line"><strong>Swipe left or right</strong><p>Move between planets. On desktop, use ← and →.</p></div><div class="line"><strong>Pinch / Enter</strong><p>Inspect the selected planet. Pinch again to return.</p></div><div class="line"><strong>Recenter</strong><p>Hold your wrist in a comfortable position, then select RECENTER.</p></div><p>If wrist tracking is unavailable, drag the scene with a finger or mouse. This app never simulates live sensor readings.</p><button class="close" id="closeHelp">CLOSE HELP</button></aside>
+</main>
+<script>
+'use strict';
+(function(){
+  const $ = id => document.getElementById(id);
+  const app=$('app'), canvas=$('sky'), c=canvas.getContext('2d',{alpha:false}), scene=$('scene');
+  const TAU=Math.PI*2, clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), mix=(a,b,t)=>a+(b-a)*t;
+  const bodies=[
+    {name:'SUN',tag:'The star at the heart of our system',au:'0 AU',period:'—',moons:'—',kind:'sun',orbit:0,r:21,phase:0,speed:0,color:'#ffc363'},
+    {name:'MERCURY',tag:'Swiftest world in the solar system',au:'0.39 AU',period:'88 days',moons:'0',kind:'rock',orbit:40,r:4,phase:.6,speed:4.15,color:'#c5b7ae'},
+    {name:'VENUS',tag:'The brilliant cloud-covered world',au:'0.72 AU',period:'225 days',moons:'0',kind:'venus',orbit:63,r:6.5,phase:2.4,speed:1.6,color:'#e9b67e'},
+    {name:'EARTH',tag:'Our pale blue dot',au:'1.00 AU',period:'365 days',moons:'1',kind:'earth',orbit:89,r:8,phase:3.8,speed:1,color:'#54aaff'},
+    {name:'MARS',tag:'A rusty world of ancient rivers',au:'1.52 AU',period:'687 days',moons:'2',kind:'mars',orbit:118,r:5.5,phase:5,speed:.53,color:'#f28764'},
+    {name:'JUPITER',tag:'King of the giant planets',au:'5.20 AU',period:'11.9 years',moons:'95+',kind:'jupiter',orbit:158,r:16.5,phase:1.8,speed:.085,color:'#deb48d'},
+    {name:'SATURN',tag:'The jewel of the outer planets',au:'9.58 AU',period:'29.4 years',moons:'146+',kind:'saturn',orbit:204,r:14.5,phase:4.8,speed:.034,color:'#f4df9c'},
+    {name:'URANUS',tag:'An ice giant tipped on its side',au:'19.2 AU',period:'84 years',moons:'28',kind:'ice',orbit:249,r:10,phase:3.05,speed:.012,color:'#87e6ec'},
+    {name:'NEPTUNE',tag:'A world of furious blue winds',au:'30.1 AU',period:'165 years',moons:'16',kind:'neptune',orbit:294,r:9.5,phase:5.8,speed:.006,color:'#6684ff'}
+  ];
+  let index=3, detail=false, time=0, last=0, raf=0, running=true, bgCanvas=null, noiseSeed=61199;
+  let yaw=.42,pitch=.51,requestedYaw=.42,requestedPitch=.51,manualYaw=.42,manualPitch=.51;
+  let tracking=false, sensor=null, latestQuat=null, referenceQuat=null, lastSample=0, trackingStart=0, toastTimer=0, liveState='off';
+  let dragging=false, px=0,py=0, pressedAt=0, viewCenterX=300,viewCenterY=258;
+  function rand(){noiseSeed=(Math.imul(noiseSeed,1664525)+1013904223)>>>0;return noiseSeed/4294967296}
+  function background(){
+    bgCanvas=document.createElement('canvas');bgCanvas.width=600;bgCanvas.height=600;const b=bgCanvas.getContext('2d');
+    const base=b.createLinearGradient(0,0,600,600);base.addColorStop(0,'#050e24');base.addColorStop(.55,'#020813');base.addColorStop(1,'#030814');b.fillStyle=base;b.fillRect(0,0,600,600);
+    for(const glow of [[88,174,270,'37,91,167',.10],[470,364,270,'86,35,175',.065],[320,266,190,'9,117,140',.06]]){const [x,y,r,rgb,a]=glow;const g=b.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${rgb},${a})`);g.addColorStop(1,`rgba(${rgb},0)`);b.fillStyle=g;b.fillRect(x-r,y-r,r*2,r*2)}
+    for(let i=0;i<155;i++){const x=rand()*600,y=rand()*600,sz=.35+rand()*1.15,a=.13+rand()*.44;b.fillStyle=`rgba(${rand()>.3?'155,204,255':'229,243,255'},${a})`;b.beginPath();b.arc(x,y,sz,0,TAU);b.fill();if(i%37===0){b.strokeStyle='rgba(177,224,255,.2)';b.beginPath();b.moveTo(x-4,y);b.lineTo(x+4,y);b.moveTo(x,y-4);b.lineTo(x,y+4);b.stroke()}}
+  }
+  function rotate(point){const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+    const x=point.x*cy-point.z*sy, z=point.x*sy+point.z*cy;
+    return {x,y:point.y*cp-z*sp,z:point.y*sp+z*cp};
+  }
+  function project(point){const p=rotate(point);const scale=clamp(.80+p.z*.00036,.63,.98);return {x:viewCenterX+p.x*scale,y:viewCenterY+p.y*scale,z:p.z,scale};}
+  const hex2rgb = h => {const n=parseInt(h.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255]};
+  function rgba(h,a){const r=hex2rgb(h);return `rgba(${r[0]},${r[1]},${r[2]},${a})`}
+  function orbPos(obj){const theta=obj.phase+time*.22*obj.speed;return {x:Math.cos(theta)*obj.orbit,y:0,z:Math.sin(theta)*obj.orbit}}
+  function ring(cx,cy,rx,ry,ang,color,width=1){c.save();c.translate(cx,cy);c.rotate(ang);c.strokeStyle=color;c.lineWidth=width;c.beginPath();c.ellipse(0,0,rx,ry,0,0,TAU);c.stroke();c.restore()}
+  function glow(x,y,r,color,alpha=.45){const grad=c.createRadialGradient(x,y,0,x,y,r);grad.addColorStop(0,rgba(color,alpha));grad.addColorStop(.37,rgba(color,alpha*.22));grad.addColorStop(1,rgba(color,0));c.fillStyle=grad;c.beginPath();c.arc(x,y,r,0,TAU);c.fill()}
+  function disk(x,y,r,obj,large=false){
+    const rgb=obj.color;
+    if(r<1.4){c.fillStyle=rgb;c.beginPath();c.arc(x,y,1.5,0,TAU);c.fill();return}
+    if(obj.kind==='sun')glow(x,y,r*3.5,'#e8a443',.24);
+    else if(large)glow(x,y,r*1.5,rgb,.14);
+    if(obj.kind==='saturn')saturnRing(x,y,r,true);
+    c.save();c.beginPath();c.arc(x,y,r,0,TAU);c.clip();
+    let grd=c.createRadialGradient(x-r*.44,y-r*.38,r*.08,x+r*.32,y+r*.2,r*1.35);grd.addColorStop(0,obj.kind==='sun'?'#fff4be':mixHex(rgb,'#ffffff',.45));grd.addColorStop(.43,rgb);grd.addColorStop(1,obj.kind==='sun'?'#b84d1a':mixHex(rgb,'#060e24',.8));c.fillStyle=grd;c.fillRect(x-r,y-r,r*2,r*2);
+    if(large){
+      if(obj.kind==='jupiter'||obj.kind==='saturn'||obj.kind==='venus'){
+        for(let k=-6;k<=6;k++){const yy=y+k*r/5+Math.sin(time*.25+k)*r*.015;c.fillStyle=k%3===0?'rgba(82,55,37,.27)':k%3===1?'rgba(254,240,200,.22)':'rgba(187,124,86,.2)';c.fillRect(x-r,yy,r*2,r*.07)}
+        if(obj.kind==='jupiter'){c.fillStyle='rgba(170,78,56,.7)';c.beginPath();c.ellipse(x+r*.35,y+r*.22,r*.20,r*.08,.1,0,TAU);c.fill()}
+      }else if(obj.kind==='earth'){
+        c.fillStyle='#5cba9b';const t=time*.12;
+        for(const [a,b,s] of [[-.38,-.45,.19],[.17,.02,.24],[-.14,.41,.12],[.53,-.29,.09]]){c.beginPath();c.ellipse(x+(a+Math.sin(t)*.24)*r,y+b*r,s*r,s*.62*r,.28,0,TAU);c.fill()}
+        c.strokeStyle='rgba(242,250,255,.54)';c.lineWidth=r*.055;
+        c.beginPath();c.ellipse(x-r*.2,y-r*.48,r*.58,r*.1,-.22,0,Math.PI);c.stroke();
+      }else if(obj.kind==='mars'||obj.kind==='rock'){
+        for(const [a,b,z] of [[-.30,.24,.16],[.43,-.22,.1],[-.52,-.27,.13],[.2,.5,.09]]){c.fillStyle=obj.kind==='mars'?'rgba(85,34,28,.3)':'rgba(78,68,72,.26)';c.beginPath();c.arc(x+a*r,y+b*r,r*z,0,TAU);c.fill()}
+      }else if(obj.kind==='ice'||obj.kind==='neptune'){
+        c.strokeStyle='rgba(219,246,255,.22)';c.lineWidth=Math.max(1,r*.045);for(let k=-2;k<=2;k++){c.beginPath();c.moveTo(x-r,y+k*r*.25);c.quadraticCurveTo(x,y+(k+.2)*r*.25,x+r,y+k*r*.25);c.stroke()}
+      }else if(obj.kind==='sun'){
+        c.strokeStyle='rgba(253,247,202,.25)';c.lineWidth=Math.max(1.2,r*.016);
+        for(let k=0;k<9;k++){const yy=y-r*.76+k*r*.19;c.beginPath();c.moveTo(x-r,yy);c.quadraticCurveTo(x,yy+Math.sin(k+time)*r*.10,x+r,yy);c.stroke()}
+      }
+    }
+    c.restore();
+    if(obj.kind==='saturn')saturnRing(x,y,r,false);
+    if(large&&obj.kind!=='sun'){c.strokeStyle=rgba(rgb,.25);c.lineWidth=1.5;c.beginPath();c.arc(x,y,r+2,0,TAU);c.stroke()}
+  }
+  function saturnRing(x,y,r,back){c.save();c.translate(x,y);c.rotate(-.33);c.scale(1,.32);
+    c.strokeStyle=back?'rgba(241,204,138,.40)':'rgba(244,220,162,.75)';c.lineWidth=back?r*.25:r*.24;
+    c.beginPath();c.ellipse(0,0,r*1.64,r*1.64,0,back?Math.PI:0,back?TAU:Math.PI);c.stroke();
+    c.strokeStyle=back?'rgba(109,142,177,.27)':'rgba(196,220,253,.48)';c.lineWidth=Math.max(1,r*.085);
+    c.beginPath();c.ellipse(0,0,r*1.91,r*1.91,0,back?Math.PI:0,back?TAU:Math.PI);c.stroke();c.restore()}
+  function mixHex(a,b,t){const ar=hex2rgb(a),br=hex2rgb(b);return '#'+ar.map((v,i)=>Math.round(mix(v,br[i],t)).toString(16).padStart(2,'0')).join('')}
+  function drawOrbit(r,selected){c.beginPath();for(let i=0;i<=128;i++){const a=i/128*TAU,p=project({x:Math.cos(a)*r,y:0,z:Math.sin(a)*r});if(i===0)c.moveTo(p.x,p.y);else c.lineTo(p.x,p.y)}c.strokeStyle=selected?'rgba(87,196,248,.48)':'rgba(93,137,190,.13)';c.lineWidth=selected?1.25:.65;c.stroke()}
+  function drawSolar(){
+    c.drawImage(bgCanvas,0,0);
+    const active=bodies[index];
+    if(detail){
+      glow(300,243,170,active.color,.10);const rings=[153,181,214];for(let j=0;j<3;j++)ring(300,244,rings[j],rings[j]*.26,(time*.02)+j*.55,rgba(active.color,j===0?.16:.085),.9);
+      const focusRadius=active.kind==='sun'?103:active.kind==='saturn'?89:98;
+      disk(300,237,focusRadius,active,true);
+      if(active.kind!=='sun'&&active.moons!=='0'){
+        for(let j=0;j<3;j++){const a=time*(.35+j*.12)+j*2.1;const orbit=140+j*18;let xx=300+Math.cos(a)*orbit, yy=241+Math.sin(a)*orbit*.22;glow(xx,yy,7,'#e7f5ff',.24);c.fillStyle='#c5d7ee';c.beginPath();c.arc(xx,yy,1.8,0,TAU);c.fill()}
+      }
+      c.save();c.fillStyle='rgba(126,199,232,.5)';c.font='9px system-ui';c.textAlign='center';c.fillText(active.name+'   ·   CLOSE ORBIT',300,381);c.restore();return;
+    }
+    const ordered=bodies.slice(1).map(p=>({p,pos:orbPos(p)}));
+    for(let i=1;i<bodies.length;i++)drawOrbit(bodies[i].orbit,index===i);
+    const central=project({x:0,y:0,z:0});disk(central.x,central.y,22,bodies[0]);
+    ordered.sort((a,b)=>project(a.pos).z-project(b.pos).z);
+    for(const item of ordered){const p=project(item.pos),b=item.p;disk(p.x,p.y,b.r*p.scale,b,false);
+      if(b===active){glow(p.x,p.y,37,b.color,.12);c.strokeStyle='rgba(132,233,250,.83)';c.lineWidth=1.2;c.beginPath();c.arc(p.x,p.y,Math.max(11,b.r*p.scale+8),0,TAU);c.stroke();
+        c.fillStyle='#d5f6ff';c.font='bold 10px system-ui';c.textAlign='left';c.fillText(b.name,p.x+Math.max(16,b.r*p.scale+14),p.y-7);
+        c.strokeStyle='rgba(117,215,255,.38)';c.beginPath();c.moveTo(p.x+Math.max(10,b.r*p.scale+8),p.y-1);c.lineTo(p.x+Math.max(13,b.r*p.scale+11),p.y-5);c.stroke();
+      }
+    }
+    if(index===0){c.strokeStyle='rgba(251,223,139,.7)';c.lineWidth=1;c.beginPath();c.arc(central.x,central.y,31,0,TAU);c.stroke()}
+    c.textAlign='left';
+    c.fillStyle='rgba(146,189,223,.7)';c.font='8px system-ui';c.fillText('HELIOCENTRIC • NOT TO SCALE',22,367);
+  }
+  function info(){const obj=bodies[index];$('planetLabel').textContent=obj.name;$('planetTag').textContent=obj.tag;$('planetIndex').textContent=String(index+1).padStart(2,'0')+' / '+String(bodies.length).padStart(2,'0');$('distance').textContent=obj.au;$('period').textContent=obj.period;$('moons').textContent=obj.moons;$('modeLabel').textContent=detail?'FOCUS MODE':'ORBIT VIEW';$('inspectBtn').querySelector('span').textContent=detail?'OVERVIEW':'EXPLORE';$('inspectBtn').setAttribute('aria-label',detail?'Return to solar system orbit view':'Inspect '+obj.name);$('hint').textContent=detail?'← → CHANGE PLANET · ENTER FOR OVERVIEW':'← → CHANGE PLANET · ENTER TO EXPLORE';$('reticle').classList.toggle('inspect',detail)}
+  function select(delta){index=(index+delta+bodies.length)%bodies.length;info()}
+  function inspect(){detail=!detail;info();announce(detail?'Exploring '+bodies[index].name:'Solar system overview')}
+  function recenter(){if(tracking){referenceQuat=latestQuat?.slice()||null;requestedYaw=manualYaw=.42;requestedPitch=manualPitch=.51;announce(referenceQuat?'Wrist recentered':'Hold wrist still; recenter after first reading')}else{manualYaw=requestedYaw=.42;manualPitch=requestedPitch=.51;announce('View recentered')}}
+  function announce(message){$('toast').textContent=message;$('toast').style.opacity='1';clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').style.opacity='0',2300)}
+  function setStatus(mode,message){liveState=mode;const el=$('sensorStatus');el.className='status'+(mode==='live'?' live':mode==='error'?' error':'');el.textContent=message;$('wristBtn').querySelector('span').textContent=tracking?'PAUSE':'WRIST';$('wristBtn').setAttribute('aria-label',tracking?'Pause wrist tracking':'Enable wrist tracking')}
+  function qNorm(q){const norm=Math.hypot(q[0],q[1],q[2],q[3]);return norm>0?[q[0]/norm,q[1]/norm,q[2]/norm,q[3]/norm]:null}
+  function qInverse(q){return [-q[0],-q[1],-q[2],q[3]]}
+  function qMultiply(a,b){const [x,y,z,w]=a,[X,Y,Z,W]=b;return [w*X+x*W+y*Z-z*Y,w*Y-x*Z+y*W+z*X,w*Z+x*Y-y*X+z*W,w*W-x*X-y*Y-z*Z]}
+  function handleQuat(raw){const q=qNorm(Array.from(raw||[]));if(!q||q.length!==4||!q.every(Number.isFinite))return;latestQuat=q;lastSample=performance.now();if(!referenceQuat)referenceQuat=q.slice();const d=qMultiply(q,qInverse(referenceQuat));const [x,y,z,w]=d;
+    // Forearm-local x/y/z relative to a user-set neutral position. Both turn and roll contribute.
+    const turn=2*Math.atan2(y,w)+.7*2*Math.atan2(z,w);
+    const tilt=2*Math.atan2(x,w)-.25*2*Math.atan2(z,w);
+    requestedYaw=clamp(.42+turn*1.25,-3.8,3.8);requestedPitch=clamp(.51+tilt*.9,-1.0,1.12);
+    if(liveState!=='live')setStatus('live','WRIST LIVE');
+  }
+  function toggleWrist(){if(tracking){stopSensor('WRIST PAUSED');announce('Wrist control paused');return}
+    if(!window.isSecureContext&&location.protocol!=='file:'){setStatus('error','HTTPS REQUIRED');announce('Wrist input needs a secure HTTPS page');return}
+    if(!('RelativeOrientationSensor' in window)){setStatus('error','NO WRIST SENSOR');announce('Wrist sensor not exposed here. Drag the scene instead.');return}
+    try{
+      // Meta documents the emg-wrist sensor ID for its Ray-Ban Display web apps.
+      sensor=new RelativeOrientationSensor({frequency:30,referenceFrame:'device',sensorId:'emg-wrist'});
+      referenceQuat=null;latestQuat=null;tracking=true;lastSample=0;trackingStart=performance.now();setStatus('off','STARTING WRIST');
+      sensor.addEventListener('reading',()=>handleQuat(sensor.quaternion));
+      sensor.addEventListener('error',event=>{const message=event.error?.name||event.error?.message||'Wrist input error';stopSensor('WRIST UNAVAILABLE');setStatus('error',message.length>20?'SENSOR ERROR':message.toUpperCase());announce(message)});
+      sensor.start();announce('Hold your wrist steady to calibrate');
+    }catch(e){tracking=false;sensor=null;setStatus('error','SENSOR BLOCKED');announce('Wrist sensor unavailable: '+(e?.message||e))}
+  }
+  function stopSensor(message='WRIST OFF'){if(sensor){try{sensor.stop()}catch{}}sensor=null;tracking=false;latestQuat=null;referenceQuat=null;setStatus('off',message)}
+  const buttons=['wristBtn','centerBtn','inspectBtn','nextBtn','helpBtn'].map($);
+  $('wristBtn').addEventListener('click',toggleWrist);$('centerBtn').addEventListener('click',recenter);$('inspectBtn').addEventListener('click',inspect);$('nextBtn').addEventListener('click',()=>select(1));$('helpBtn').addEventListener('click',()=>showHelp(true));
+  function showHelp(show){$('help').classList.toggle('show',show);$('help').setAttribute('aria-hidden',show?'false':'true');if(show){$('closeHelp').focus();stopSensor('WRIST PAUSED')}else scene.focus({preventScroll:true})}
+  $('closeHelp').addEventListener('click',()=>showHelp(false));
+  document.addEventListener('keydown',e=>{
+    if($('help').classList.contains('show')){if(e.key==='Escape'||e.key==='Backspace'||e.key==='Enter'){e.preventDefault();showHelp(false)}return}
+    let active=document.activeElement,i=buttons.indexOf(active);
+    if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter'].includes(e.key))e.preventDefault();
+    if(e.key==='ArrowUp'){scene.focus({preventScroll:true})}
+    else if(e.key==='ArrowDown'){buttons[Math.max(0,i)].focus({preventScroll:true})}
+    else if(e.key==='ArrowLeft'){if(i>=0)buttons[(i+buttons.length-1)%buttons.length].focus({preventScroll:true});else select(-1)}
+    else if(e.key==='ArrowRight'){if(i>=0)buttons[(i+1)%buttons.length].focus({preventScroll:true});else select(1)}
+    else if(e.key==='Enter'){if(i>=0)buttons[i].click();else inspect()}
+    else if(e.key==='Escape'||e.key==='Backspace'){if(detail){e.preventDefault();inspect()}else if(i>=0){e.preventDefault();scene.focus({preventScroll:true})}}
+  });
+  scene.addEventListener('pointerdown',e=>{dragging=true;px=e.clientX;py=e.clientY;pressedAt=performance.now();scene.setPointerCapture?.(e.pointerId)});
+  scene.addEventListener('pointermove',e=>{if(!dragging)return;const scale=600/Math.max(120,scene.getBoundingClientRect().width);const dx=(e.clientX-px)*scale,dy=(e.clientY-py)*scale;px=e.clientX;py=e.clientY;if(tracking)return;manualYaw=requestedYaw=clamp(manualYaw+dx*.008,-3.8,3.8);manualPitch=requestedPitch=clamp(manualPitch+dy*.006,-1,1.12)});
+  scene.addEventListener('pointerup',e=>{if(dragging&&performance.now()-pressedAt<230&&!tracking)inspect();dragging=false});scene.addEventListener('pointercancel',()=>dragging=false);
+  scene.addEventListener('wheel',e=>{e.preventDefault();if(!tracking)manualPitch=requestedPitch=clamp(manualPitch+Math.sign(e.deltaY)*.09,-1,1.12)},{passive:false});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){running=false;stopSensor('WRIST PAUSED');cancelAnimationFrame(raf)}else{running=true;last=0;raf=requestAnimationFrame(tick)}});
+  function tick(t){if(!running)return;raf=requestAnimationFrame(tick);if(t-last<31.8)return;const elapsed=last?(t-last)/1000:0;last=t;time+=Math.min(.07,elapsed);if(tracking&&((lastSample&&t-lastSample>1700)||(lastSample===0&&t-trackingStart>3000))&&liveState!=='error'&&$('sensorStatus').textContent!=='WRIST STALE'&&$('sensorStatus').textContent!=='NO WRIST DATA')setStatus('off',lastSample?'WRIST STALE':'NO WRIST DATA');
+    if(!tracking){requestedYaw=manualYaw;requestedPitch=manualPitch}
+    yaw=mix(yaw,requestedYaw,.11);pitch=mix(pitch,requestedPitch,.11);
+    drawSolar();
+  }
+  background();info();setStatus('off','WRIST OFF');scene.focus({preventScroll:true});raf=requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
