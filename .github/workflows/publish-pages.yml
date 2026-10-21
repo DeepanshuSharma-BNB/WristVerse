@@ -1,0 +1,47 @@
+name: Publish WristVerse on GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out WristVerse
+        uses: actions/checkout@v4
+
+      - name: Validate and prepare website
+        run: |
+          test -s index.html
+          test -s icon.svg
+          test -s manifest.webmanifest
+          grep -q "RelativeOrientationSensor" index.html
+          mkdir -p public-site
+          cp index.html icon.svg manifest.webmanifest public-site/
+          touch public-site/.nojekyll
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload static website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public-site
+
+      - name: Deploy website
+        id: deployment
+        uses: actions/deploy-pages@v4
